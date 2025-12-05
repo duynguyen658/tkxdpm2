@@ -32,10 +32,6 @@ Module quản lý sách cho thư viện, hỗ trợ:
 
 **Xem chi tiết**: [THXDPM_QUANLYSACH/README.md](THXDPM_QUANLYSACH/README.md)
 
-### THXDPM_VANPHONGPHAM (Project độc lập)
-
-Project tham khảo về quản lý văn phòng phẩm (không phải module).
-
 ## 🚀 Cách sử dụng
 
 ### 1. Build tất cả modules
