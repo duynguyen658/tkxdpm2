@@ -1,0 +1,40 @@
+@startuml Sequence Diagram - Lấy Danh Sách Tất Cả Sách
+!theme plain
+autonumber
+
+actor "Client" as Client
+participant "BookController" as Controller
+participant "GetAllBooksService" as Service
+participant "BookRepository" as Repository
+participant "BookResponse" as Response
+
+Client -> Controller: GET /api/books
+activate Controller
+
+Controller -> Service: execute()
+activate Service
+
+Service -> Repository: findAll()
+activate Repository
+Repository --> Service: List<Book>
+deactivate Repository
+
+Service -> Service: map(BookResponse::from)
+
+loop Với mỗi Book
+    Service -> Response: from(book)
+    activate Response
+    Response -> Response: Convert to BookResponse
+    Response --> Service: BookResponse
+    deactivate Response
+end
+
+Service --> Controller: Result.ok(List<BookResponse>)
+
+Controller --> Client: HTTP 200 OK\n{\n  success: true,\n  total: number,\n  books: List<BookResponse>\n}
+
+deactivate Service
+deactivate Controller
+
+@enduml
+

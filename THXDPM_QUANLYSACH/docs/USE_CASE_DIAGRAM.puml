@@ -1,0 +1,61 @@
+@startuml Use Case Diagram - Quản lý Sách
+!theme plain
+skinparam usecase {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+}
+
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle "Hệ thống Quản lý Sách" {
+    package "CRUD Operations" {
+        usecase "Thêm sách" as UC1
+        usecase "Cập nhật sách" as UC2
+        usecase "Xóa sách" as UC3
+        usecase "Lấy danh sách sách" as UC4
+    }
+    
+    package "Tìm kiếm & Lọc" {
+        usecase "Tìm kiếm sách" as UC5
+        usecase "Lấy sách giáo khoa theo nhà xuất bản" as UC6
+    }
+    
+    package "Thống kê" {
+        usecase "Tính tổng thành tiền theo loại" as UC7
+        usecase "Tính trung bình đơn giá sách tham khảo" as UC8
+    }
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+
+note right of UC1
+  Hỗ trợ 2 loại:
+  - Sách giáo khoa (có tình trạng)
+  - Sách tham khảo (có thuế)
+end note
+
+note right of UC5
+  Tìm theo:
+  - Mã sách
+  - Nhà xuất bản
+  - Loại sách
+end note
+
+note right of UC7
+  Tính tổng:
+  - Sách giáo khoa
+  - Sách tham khảo
+  - Tổng tất cả
+end note
+
+@enduml
+

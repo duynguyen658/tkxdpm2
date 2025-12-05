@@ -1,0 +1,64 @@
+@startuml Sequence Diagram - Thêm Sách
+!theme plain
+autonumber
+
+actor "Client" as Client
+participant "BookController" as Controller
+participant "AddBookService" as Service
+participant "BookRepository" as Repository
+participant "SachGiaoKhoa" as Entity
+participant "ValueObjects" as VOs
+
+Client -> Controller: POST /api/books\n(AddBookRequest)
+activate Controller
+
+Controller -> Service: execute(request)
+activate Service
+
+Service -> VOs: Parse & Validate\n(BookId, ImportDate, Price, Quantity, Publisher)
+activate VOs
+VOs --> Service: Value Objects
+deactivate VOs
+
+alt Sách giáo khoa
+    Service -> VOs: BookStatus.fromString(tinhTrang)
+    activate VOs
+    VOs --> Service: BookStatus
+    deactivate VOs
+    Service -> Entity: SachGiaoKhoa.create(...)
+    activate Entity
+    Entity --> Service: SachGiaoKhoa
+    deactivate Entity
+else Sách tham khảo
+    Service -> VOs: Tax.of(thue)
+    activate VOs
+    VOs --> Service: Tax
+    deactivate VOs
+    Service -> Entity: SachThamKhao.create(...)
+    activate Entity
+    Entity --> Service: SachThamKhao
+    deactivate Entity
+end
+
+Service -> Repository: existsById(bookId)
+activate Repository
+Repository --> Service: boolean
+deactivate Repository
+
+alt Mã sách đã tồn tại
+    Service --> Controller: Result.fail("Mã sách đã tồn tại")
+else Mã sách chưa tồn tại
+    Service -> Repository: save(book)
+    activate Repository
+    Repository --> Service: Book (saved)
+    deactivate Repository
+    Service --> Controller: Result.ok(AddBookResponse)
+end
+
+Controller --> Client: HTTP 201 Created\n(AddBookResponse)
+
+deactivate Service
+deactivate Controller
+
+@enduml
+

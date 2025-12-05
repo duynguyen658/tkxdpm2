@@ -1,0 +1,62 @@
+@startuml Sequence Diagram - Tính Tổng Thành Tiền Theo Loại
+!theme plain
+autonumber
+
+actor "Client" as Client
+participant "BookController" as Controller
+participant "CalculateTotalByTypeService" as Service
+participant "BookRepository" as Repository
+participant "SachGiaoKhoa" as SGK
+participant "SachThamKhao" as STK
+
+Client -> Controller: GET /api/books/statistics/total-by-type
+activate Controller
+
+Controller -> Service: execute()
+activate Service
+
+Service -> Repository: findAll()
+activate Repository
+Repository --> Service: List<Book>
+deactivate Repository
+
+Service -> Service: Initialize counters\n(tongThanhTienSachGiaoKhoa = 0)\n(tongThanhTienSachThamKhao = 0)
+
+loop Với mỗi Book
+    alt Book là SachGiaoKhoa
+        Service -> SGK: calculateTotal()
+        activate SGK
+        SGK --> Service: TotalAmount
+        deactivate SGK
+        Service -> Service: tongThanhTienSachGiaoKhoa += total
+    else Book là SachThamKhao
+        Service -> STK: calculateTotal()
+        activate STK
+        STK --> Service: TotalAmount
+        deactivate STK
+        Service -> Service: tongThanhTienSachThamKhao += total
+    end
+end
+
+Service -> Service: tongThanhTienTatCa = \ntongThanhTienSachGiaoKhoa + \ntongThanhTienSachThamKhao
+
+Service --> Controller: Result.ok(TotalByTypeResponse)
+
+Controller --> Client: HTTP 200 OK\n{\n  tongThanhTienSachGiaoKhoa,\n  tongThanhTienSachThamKhao,\n  tongThanhTienTatCa\n}
+
+deactivate Service
+deactivate Controller
+
+note right of SGK
+  Tính thành tiền:
+  - Mới: soLuong × donGia
+  - Cũ: soLuong × donGia × 50%
+end note
+
+note right of STK
+  Tính thành tiền:
+  soLuong × donGia + thue
+end note
+
+@enduml
+

@@ -1,0 +1,57 @@
+@startuml Sequence Diagram - Lấy Sách Giáo Khoa Theo Nhà Xuất Bản
+!theme plain
+autonumber
+
+actor "Client" as Client
+participant "BookController" as Controller
+participant "GetBooksByPublisherService" as Service
+participant "BookRepository" as Repository
+participant "SachGiaoKhoa" as SGK
+
+Client -> Controller: GET /api/books/publisher/{publisher}
+activate Controller
+
+Controller -> Service: execute(publisher)
+activate Service
+
+alt Publisher rỗng hoặc null
+    Service --> Controller: Result.fail("Tên nhà xuất bản không được để trống")
+else Publisher hợp lệ
+    Service -> Repository: findAll()
+    activate Repository
+    Repository --> Service: List<Book>
+    deactivate Repository
+    
+    Service -> Service: Filter:\n- instanceof SachGiaoKhoa\n- publisher.contains(publisher)
+    
+    loop Với mỗi Book
+        alt Book là SachGiaoKhoa
+            Service -> SGK: publisher().value()
+            activate SGK
+            SGK --> Service: String publisher
+            deactivate SGK
+            
+            Service -> Service: Check if publisher\ncontains keyword\n(case-insensitive)
+            
+            alt Match
+                Service -> Service: Add to results
+            end
+        end
+    end
+    
+    Service -> Service: map(BookResponse::from)
+    Service --> Controller: Result.ok(List<BookResponse>)
+end
+
+Controller --> Client: HTTP 200 OK\n{\n  publisher,\n  total,\n  books: List<BookResponse>\n}
+
+deactivate Service
+deactivate Controller
+
+note right of Service
+  Chỉ trả về sách giáo khoa
+  Không bao gồm sách tham khảo
+end note
+
+@enduml
+

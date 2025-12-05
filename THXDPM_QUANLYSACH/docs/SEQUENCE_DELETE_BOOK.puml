@@ -1,0 +1,41 @@
+@startuml Sequence Diagram - Xóa Sách
+!theme plain
+autonumber
+
+actor "Client" as Client
+participant "BookController" as Controller
+participant "DeleteBookService" as Service
+participant "BookRepository" as Repository
+
+Client -> Controller: DELETE /api/books/{bookId}
+activate Controller
+
+Controller -> Service: execute(bookId)
+activate Service
+
+Service -> Service: BookId.of(bookId)
+
+Service -> Repository: existsById(bookId)
+activate Repository
+Repository --> Service: boolean
+deactivate Repository
+
+alt Sách không tồn tại
+    Service --> Controller: Result.fail("Không tìm thấy sách")
+else Sách tồn tại
+    Service -> Repository: delete(bookId)
+    activate Repository
+    Repository -> Repository: Remove from storage
+    Repository --> Service: void
+    deactivate Repository
+    
+    Service --> Controller: Result.ok("Đã xóa sách thành công")
+end
+
+Controller --> Client: HTTP 200 OK\n{success, message}
+
+deactivate Service
+deactivate Controller
+
+@enduml
+

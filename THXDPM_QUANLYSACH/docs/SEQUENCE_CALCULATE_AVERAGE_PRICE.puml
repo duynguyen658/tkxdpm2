@@ -1,0 +1,53 @@
+@startuml Sequence Diagram - Tính Trung Bình Đơn Giá Sách Tham Khảo
+!theme plain
+autonumber
+
+actor "Client" as Client
+participant "BookController" as Controller
+participant "CalculateAveragePriceService" as Service
+participant "BookRepository" as Repository
+participant "SachThamKhao" as STK
+
+Client -> Controller: GET /api/books/statistics/average-price
+activate Controller
+
+Controller -> Service: execute()
+activate Service
+
+Service -> Repository: findAll()
+activate Repository
+Repository --> Service: List<Book>
+deactivate Repository
+
+Service -> Service: Filter: instanceof SachThamKhao
+
+loop Với mỗi Book
+    alt Book là SachThamKhao
+        Service -> STK: unitPrice().value()
+        activate STK
+        STK --> Service: double unitPrice
+        deactivate STK
+        Service -> Service: Add to list
+    end
+end
+
+alt Có sách tham khảo
+    Service -> Service: tongDonGia = sum(unitPrices)
+    Service -> Service: trungBinh = tongDonGia / soLuong
+    Service --> Controller: Result.ok(AveragePriceResponse)
+else Không có sách tham khảo
+    Service --> Controller: Result.ok(\n  AveragePriceResponse(\n    trungBinh = 0.0,\n    soLuong = 0\n  )\n)
+end
+
+Controller --> Client: HTTP 200 OK\n{\n  trungBinhCongDonGia,\n  soLuongSachThamKhao\n}
+
+deactivate Service
+deactivate Controller
+
+note right of Service
+  Chỉ tính sách tham khảo
+  Bỏ qua sách giáo khoa
+end note
+
+@enduml
+

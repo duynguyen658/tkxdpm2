@@ -1,0 +1,51 @@
+@startuml Sequence Diagram - Tìm kiếm Sách
+!theme plain
+autonumber
+
+actor "Client" as Client
+participant "BookController" as Controller
+participant "SearchBooksService" as Service
+participant "BookRepository" as Repository
+participant "Book" as Entity
+
+Client -> Controller: GET /api/books/search?keyword={keyword}
+activate Controller
+
+Controller -> Service: execute(keyword)
+activate Service
+
+alt Keyword rỗng hoặc null
+    Service --> Controller: Result.fail("Từ khóa không được để trống")
+else Keyword hợp lệ
+    Service -> Repository: findAll()
+    activate Repository
+    Repository --> Service: List<Book>
+    deactivate Repository
+    
+    loop Với mỗi Book
+        Service -> Entity: matchesKeyword(book, keyword)
+        activate Entity
+        Entity --> Service: boolean
+        deactivate Entity
+    end
+    
+    Service -> Service: map(BookResponse::from)
+    Service --> Controller: Result.ok(List<BookResponse>)
+end
+
+Controller --> Client: HTTP 200 OK\n(List<BookResponse>)
+
+deactivate Service
+deactivate Controller
+
+note right of Service
+  Tìm kiếm theo:
+  - Mã sách (book.id())
+  - Nhà xuất bản (book.publisher())
+  - Loại sách (book.getBookType())
+  
+  Không phân biệt hoa thường
+end note
+
+@enduml
+

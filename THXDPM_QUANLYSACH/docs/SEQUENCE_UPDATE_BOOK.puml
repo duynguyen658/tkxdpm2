@@ -1,0 +1,71 @@
+@startuml Sequence Diagram - Cập nhật Sách
+!theme plain
+autonumber
+
+actor "Client" as Client
+participant "BookController" as Controller
+participant "UpdateBookService" as Service
+participant "BookRepository" as Repository
+participant "SachGiaoKhoa" as SGK
+participant "SachThamKhao" as STK
+participant "ValueObjects" as VOs
+
+Client -> Controller: PUT /api/books/{bookId}\n(UpdateBookRequest)
+activate Controller
+
+Controller -> Service: execute(bookId, request)
+activate Service
+
+Service -> VOs: BookId.of(bookId)
+activate VOs
+VOs --> Service: BookId
+deactivate VOs
+
+Service -> Repository: findById(bookId)
+activate Repository
+Repository --> Service: Optional<Book>
+deactivate Repository
+
+alt Sách không tồn tại
+    Service --> Controller: Result.fail("Không tìm thấy sách")
+else Sách tồn tại
+    Service -> VOs: Parse & Validate\n(ImportDate, Price, Quantity, Publisher)
+    activate VOs
+    VOs --> Service: Value Objects
+    deactivate VOs
+    
+    alt Sách giáo khoa
+        Service -> VOs: BookStatus.fromString(tinhTrang)
+        activate VOs
+        VOs --> Service: BookStatus
+        deactivate VOs
+        Service -> SGK: update(importDate, unitPrice, quantity, publisher, status)
+        activate SGK
+        SGK --> Service: SachGiaoKhoa (updated)
+        deactivate SGK
+    else Sách tham khảo
+        Service -> VOs: Tax.of(thue)
+        activate VOs
+        VOs --> Service: Tax
+        deactivate VOs
+        Service -> STK: update(importDate, unitPrice, quantity, publisher, tax)
+        activate STK
+        STK --> Service: SachThamKhao (updated)
+        deactivate STK
+    end
+    
+    Service -> Repository: save(updatedBook)
+    activate Repository
+    Repository --> Service: Book (saved)
+    deactivate Repository
+    
+    Service --> Controller: Result.ok(UpdateBookResponse)
+end
+
+Controller --> Client: HTTP 200 OK\n(UpdateBookResponse)
+
+deactivate Service
+deactivate Controller
+
+@enduml
+
