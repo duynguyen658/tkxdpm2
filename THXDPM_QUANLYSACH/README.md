@@ -15,7 +15,9 @@
 - [API Endpoints](#-api-endpoints)
 - [Quy tắc tính thành tiền](#-quy-tắc-tính-thành-tiền)
 - [Chạy ứng dụng](#-chạy-ứng-dụng)
+- [Giao diện Web](#-giao-diện-web)
 - [Chạy Tests](#-chạy-tests)
+- [Test Cases](#-test-cases)
 - [Test API](#-test-api)
 - [Troubleshooting](#-troubleshooting)
 
@@ -271,7 +273,7 @@ GET /api/books/publisher/NXB Giáo Dục
 
 #### 8. Tính trung bình cộng đơn giá sách tham khảo (GET /api/books/statistics/average-price)
 
-**Response:**
+**Response (Khi có sách tham khảo):**
 ```json
 {
   "success": true,
@@ -280,7 +282,15 @@ GET /api/books/publisher/NXB Giáo Dục
 }
 ```
 
-**Lưu ý:** Nếu không có sách tham khảo, trả về `trungBinhCongDonGia: 0.0` và `soLuongSachThamKhao: 0`.
+**Response (Khi không có sách tham khảo):**
+```json
+{
+  "success": false,
+  "message": "Không có sách tham khảo trong hệ thống"
+}
+```
+
+**Lưu ý:** Nếu không có sách tham khảo, API sẽ trả về lỗi (HTTP 500) với thông báo tương ứng.
 
 ## 📊 Quy tắc tính thành tiền
 
@@ -313,6 +323,22 @@ GET /api/books/publisher/NXB Giáo Dục
 | `thue` | ✅* | Bắt buộc cho sách tham khảo, phải ≥ 0 |
 
 *Chỉ bắt buộc tùy theo loại sách
+
+### Kịch bản thêm sách
+
+#### Kịch bản 1: Thêm sách thành công (đủ thông tin, trạng thái)
+- ✅ Sách giáo khoa với tình trạng "mới" hoặc "cũ"
+- ✅ Sách tham khảo với thuế đầy đủ
+- ✅ Tất cả các trường bắt buộc đều được cung cấp
+
+#### Kịch bản 2: Thêm sách thất bại (validation fails)
+- ❌ Sách giáo khoa thiếu tình trạng → Lỗi: "Sách giáo khoa cần có tình trạng (mới/cũ)"
+- ❌ Sách tham khảo thiếu thuế → Lỗi: "Sách tham khảo cần có thuế"
+- ❌ Mã sách đã tồn tại → Lỗi: "Mã sách đã tồn tại: {maSach}"
+
+#### Kịch bản 3: Thêm sách thành công (thiếu mã sách, hệ thống tự tạo)
+- ✅ Không cung cấp `maSach` → Hệ thống tự động tạo UUID
+- ✅ Mã sách tự tạo là unique và không trùng lặp
 
 ### Cập nhật sách (UpdateBookRequest)
 
@@ -363,6 +389,20 @@ java -jar target/THXDPM_QUANLYSACH-0.0.1-SNAPSHOT.jar
 ```
 
 Ứng dụng sẽ chạy tại: **http://localhost:8080**
+
+### Giao diện Web
+
+Sau khi chạy ứng dụng, bạn có thể truy cập giao diện web tại: **http://localhost:8080**
+
+Giao diện web cung cấp:
+- 📊 Dashboard thống kê (tổng số sách, tổng thành tiền theo loại, trung bình đơn giá)
+- 📚 Danh sách sách với đầy đủ thông tin
+- ➕ Thêm sách mới (form động theo loại sách)
+- ✏️ Sửa thông tin sách
+- 🗑️ Xóa sách (có xác nhận)
+- 🔍 Tìm kiếm sách theo mã sách, nhà xuất bản, loại sách
+- 📑 Lọc sách giáo khoa theo nhà xuất bản
+- 📱 Responsive design (tương thích mobile và desktop)
 
 ## 🧪 Chạy Tests
 
@@ -523,6 +563,33 @@ mvn test -Dtest=UpdateBookServiceTest
 cd d:\TKXDPM
 mvn clean install
 ```
+
+## 🧪 Test Cases
+
+### Thêm sách (AddBookService)
+
+- **Kịch bản 1**: Thêm sách thành công (đủ thông tin, trạng thái)
+  - Thêm sách giáo khoa tình trạng "mới"
+  - Thêm sách giáo khoa tình trạng "cũ"
+  - Thêm sách tham khảo với thuế đầy đủ
+
+- **Kịch bản 2**: Thêm sách thất bại (validation fails)
+  - Thiếu tình trạng của sách giáo khoa
+  - Thiếu thuế của sách tham khảo
+  - Trùng mã sách
+
+- **Kịch bản 3**: Thêm sách thành công (thiếu mã sách, hệ thống tự tạo)
+  - Tự động tạo mã sách cho sách giáo khoa
+  - Tự động tạo mã sách cho sách tham khảo
+  - Đảm bảo mã sách tự tạo là unique
+
+### Tính trung bình đơn giá sách tham khảo (CalculateAveragePriceService)
+
+- **Kịch bản 1**: Tính trung bình thành công (có sách tham khảo)
+  - Trả về `Result.ok` với giá trị trung bình và số lượng sách
+
+- **Kịch bản 2**: Tính trung bình thất bại (không có sách tham khảo)
+  - Trả về `Result.fail` với thông báo "Không có sách tham khảo trong hệ thống"
 
 ## 📚 Tài liệu tham khảo
 

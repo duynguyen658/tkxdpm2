@@ -32,9 +32,11 @@ class AddBookServiceTest {
     }
 
     @Test
-    void kichBan1_shouldAddSachGiaoKhoa_whenStatusIsMoi() {
-        // Kịch bản 1: Thêm sách giáo khoa tình trạng mới
-        final AddBookRequest request = new AddBookRequest(
+    void kichBan1_shouldAddBookSuccessfully_whenAllFieldsValid() {
+        // Kịch bản 1: Thêm sách thành công (đủ thông tin, trạng thái)
+        
+        // Test case 1.1: Thêm sách giáo khoa tình trạng mới
+        final AddBookRequest requestSGKMoi = new AddBookRequest(
                 "SACH_GIAO_KHOA",
                 "SGK-001",
                 "15/01/2024",
@@ -45,26 +47,21 @@ class AddBookServiceTest {
                 null
         );
 
-        final Result<AddBookResponse> result = service.execute(request);
-
+        Result<AddBookResponse> result = service.execute(requestSGKMoi);
         assertTrue(result.isSuccess());
-        final AddBookResponse response = result.payload().orElseThrow();
+        AddBookResponse response = result.payload().orElseThrow();
         assertEquals("SGK-001", response.bookId());
         assertEquals("Sách giáo khoa", response.bookType());
 
-        // Kiểm tra sách đã được lưu
-        final Book savedBook = bookRepository.findById(BookId.of("SGK-001")).orElseThrow();
+        Book savedBook = bookRepository.findById(BookId.of("SGK-001")).orElseThrow();
         assertTrue(savedBook instanceof SachGiaoKhoa);
-        final SachGiaoKhoa sachGiaoKhoa = (SachGiaoKhoa) savedBook;
+        SachGiaoKhoa sachGiaoKhoa = (SachGiaoKhoa) savedBook;
         assertEquals("mới", sachGiaoKhoa.status().displayName());
         // Thành tiền = 10 * 50000 = 500000
         assertEquals(500000, savedBook.calculateTotal().value(), 0.01);
-    }
 
-    @Test
-    void kichBan2_shouldAddSachGiaoKhoa_whenStatusIsCu() {
-        // Kịch bản 2: Thêm sách giáo khoa tình trạng cũ
-        final AddBookRequest request = new AddBookRequest(
+        // Test case 1.2: Thêm sách giáo khoa tình trạng cũ
+        final AddBookRequest requestSGKCu = new AddBookRequest(
                 "SACH_GIAO_KHOA",
                 "SGK-002",
                 "15/01/2024",
@@ -75,18 +72,14 @@ class AddBookServiceTest {
                 null
         );
 
-        final Result<AddBookResponse> result = service.execute(request);
-
+        result = service.execute(requestSGKCu);
         assertTrue(result.isSuccess());
-        final Book savedBook = bookRepository.findById(BookId.of("SGK-002")).orElseThrow();
+        savedBook = bookRepository.findById(BookId.of("SGK-002")).orElseThrow();
         // Thành tiền = 10 * 50000 * 0.5 = 250000
         assertEquals(250000, savedBook.calculateTotal().value(), 0.01);
-    }
 
-    @Test
-    void kichBan3_shouldAddSachThamKhao_whenAllFieldsValid() {
-        // Kịch bản 3: Thêm sách tham khảo
-        final AddBookRequest request = new AddBookRequest(
+        // Test case 1.3: Thêm sách tham khảo
+        final AddBookRequest requestSTK = new AddBookRequest(
                 "SACH_THAM_KHAO",
                 "STK-001",
                 "15/01/2024",
@@ -97,26 +90,26 @@ class AddBookServiceTest {
                 5000.0
         );
 
-        final Result<AddBookResponse> result = service.execute(request);
-
+        result = service.execute(requestSTK);
         assertTrue(result.isSuccess());
-        final AddBookResponse response = result.payload().orElseThrow();
+        response = result.payload().orElseThrow();
         assertEquals("STK-001", response.bookId());
         assertEquals("Sách tham khảo", response.bookType());
 
-        // Kiểm tra sách đã được lưu
-        final Book savedBook = bookRepository.findById(BookId.of("STK-001")).orElseThrow();
+        savedBook = bookRepository.findById(BookId.of("STK-001")).orElseThrow();
         assertTrue(savedBook instanceof SachThamKhao);
-        final SachThamKhao sachThamKhao = (SachThamKhao) savedBook;
+        SachThamKhao sachThamKhao = (SachThamKhao) savedBook;
         assertEquals(5000, sachThamKhao.tax().value(), 0.01);
         // Thành tiền = 5 * 80000 + 5000 = 405000
         assertEquals(405000, savedBook.calculateTotal().value(), 0.01);
     }
 
     @Test
-    void kichBan4_shouldReturnFailure_whenSachGiaoKhoaMissingStatus() {
-        // Kịch bản 4: Thêm sách giáo khoa thiếu tình trạng
-        final AddBookRequest request = new AddBookRequest(
+    void kichBan2_shouldReturnFailure_whenValidationFails() {
+        // Kịch bản 2: Thêm sách thất bại (thiếu trạng thái của SGK, thiếu thuế của STK, trùng mã sách)
+        
+        // Test case 2.1: Thêm sách giáo khoa thiếu tình trạng
+        final AddBookRequest requestMissingStatus = new AddBookRequest(
                 "SACH_GIAO_KHOA",
                 "SGK-003",
                 "15/01/2024",
@@ -127,16 +120,12 @@ class AddBookServiceTest {
                 null
         );
 
-        final Result<AddBookResponse> result = service.execute(request);
-
+        Result<AddBookResponse> result = service.execute(requestMissingStatus);
         assertFalse(result.isSuccess());
         assertTrue(result.errorMessage().orElse("").contains("tình trạng"));
-    }
 
-    @Test
-    void kichBan5_shouldReturnFailure_whenSachThamKhaoMissingTax() {
-        // Kịch bản 5: Thêm sách tham khảo thiếu thuế
-        final AddBookRequest request = new AddBookRequest(
+        // Test case 2.2: Thêm sách tham khảo thiếu thuế
+        final AddBookRequest requestMissingTax = new AddBookRequest(
                 "SACH_THAM_KHAO",
                 "STK-002",
                 "15/01/2024",
@@ -147,15 +136,11 @@ class AddBookServiceTest {
                 null // Thiếu thuế
         );
 
-        final Result<AddBookResponse> result = service.execute(request);
-
+        result = service.execute(requestMissingTax);
         assertFalse(result.isSuccess());
         assertTrue(result.errorMessage().orElse("").contains("thuế"));
-    }
 
-    @Test
-    void kichBan6_shouldReturnFailure_whenBookIdAlreadyExists() {
-        // Kịch bản 6: Thêm sách với mã sách đã tồn tại
+        // Test case 2.3: Thêm sách với mã sách đã tồn tại
         final AddBookRequest firstRequest = new AddBookRequest(
                 "SACH_GIAO_KHOA",
                 "SGK-DUPLICATE",
@@ -166,7 +151,7 @@ class AddBookServiceTest {
                 "mới",
                 null
         );
-        service.execute(firstRequest); // Thêm lần đầu
+        service.execute(firstRequest); // Thêm lần đầu thành công
 
         final AddBookRequest duplicateRequest = new AddBookRequest(
                 "SACH_GIAO_KHOA",
@@ -179,16 +164,17 @@ class AddBookServiceTest {
                 null
         );
 
-        final Result<AddBookResponse> result = service.execute(duplicateRequest);
-
+        result = service.execute(duplicateRequest);
         assertFalse(result.isSuccess());
         assertTrue(result.errorMessage().orElse("").contains("đã tồn tại"));
     }
 
     @Test
-    void kichBan7_shouldAutoGenerateBookId_whenNotProvided() {
-        // Kịch bản 7: Tự động tạo mã sách nếu không cung cấp
-        final AddBookRequest request = new AddBookRequest(
+    void kichBan3_shouldAddBookSuccessfully_whenBookIdNotProvided() {
+        // Kịch bản 3: Thêm sách thành công (Thiếu mã sách, hệ thống tự tạo)
+        
+        // Test case 3.1: Thêm sách giáo khoa không có mã sách
+        final AddBookRequest requestWithoutIdSGK = new AddBookRequest(
                 "SACH_GIAO_KHOA",
                 null, // Không cung cấp mã sách
                 "15/01/2024",
@@ -199,12 +185,57 @@ class AddBookServiceTest {
                 null
         );
 
-        final Result<AddBookResponse> result = service.execute(request);
-
+        Result<AddBookResponse> result = service.execute(requestWithoutIdSGK);
         assertTrue(result.isSuccess());
-        final AddBookResponse response = result.payload().orElseThrow();
+        AddBookResponse response = result.payload().orElseThrow();
         assertNotNull(response.bookId());
         assertFalse(response.bookId().isBlank());
+        assertEquals("Sách giáo khoa", response.bookType());
+
+        // Kiểm tra sách đã được lưu với mã tự tạo
+        Book savedBook = bookRepository.findById(BookId.of(response.bookId())).orElseThrow();
+        assertTrue(savedBook instanceof SachGiaoKhoa);
+
+        // Test case 3.2: Thêm sách tham khảo không có mã sách
+        final AddBookRequest requestWithoutIdSTK = new AddBookRequest(
+                "SACH_THAM_KHAO",
+                null, // Không cung cấp mã sách
+                "15/01/2024",
+                80000,
+                5,
+                "NXB Khoa Học",
+                null,
+                5000.0
+        );
+
+        result = service.execute(requestWithoutIdSTK);
+        assertTrue(result.isSuccess());
+        response = result.payload().orElseThrow();
+        assertNotNull(response.bookId());
+        assertFalse(response.bookId().isBlank());
+        assertEquals("Sách tham khảo", response.bookType());
+
+        // Kiểm tra sách đã được lưu với mã tự tạo
+        savedBook = bookRepository.findById(BookId.of(response.bookId())).orElseThrow();
+        assertTrue(savedBook instanceof SachThamKhao);
+
+        // Test case 3.3: Đảm bảo mã sách tự tạo là unique
+        final AddBookRequest requestWithoutIdSGK2 = new AddBookRequest(
+                "SACH_GIAO_KHOA",
+                null, // Không cung cấp mã sách
+                "16/01/2024",
+                60000,
+                12,
+                "NXB Giáo Dục",
+                "cũ",
+                null
+        );
+
+        result = service.execute(requestWithoutIdSGK2);
+        assertTrue(result.isSuccess());
+        AddBookResponse response2 = result.payload().orElseThrow();
+        // Mã sách tự tạo phải khác nhau
+        assertFalse(response.bookId().equals(response2.bookId()));
     }
 
     private static class InMemoryBookRepository implements BookRepository {
@@ -237,4 +268,3 @@ class AddBookServiceTest {
         }
     }
 }
-

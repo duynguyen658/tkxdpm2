@@ -339,14 +339,15 @@ GET /api/books/statistics/average-price
 }
 ```
 
-### Response (Khi không có sách tham khảo)
+### Response (Khi không có sách tham khảo - HTTP 500)
 ```json
 {
-  "success": true,
-  "trungBinhCongDonGia": 0.0,
-  "soLuongSachThamKhao": 0
+  "success": false,
+  "message": "Không có sách tham khảo trong hệ thống"
 }
 ```
+
+**Lưu ý**: Khi không có sách tham khảo, API sẽ trả về lỗi (HTTP 500) thay vì trả về giá trị 0.
 
 ---
 

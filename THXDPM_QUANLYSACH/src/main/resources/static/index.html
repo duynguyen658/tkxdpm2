@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Sách - Thư Viện X</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-book"></i> Quản Lý Sách - Thư Viện X</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openAddBookModal()">
+                        <i class="fas fa-plus"></i> Thêm Sách Mới
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Statistics Cards -->
+        <section class="statistics">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+                <div class="stat-content">
+                    <h3 id="totalBooks">0</h3>
+                    <p>Tổng số sách</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
+                <div class="stat-content">
+                    <h3 id="totalGiaoKhoa">0 đ</h3>
+                    <p>Tổng thành tiền SGK</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-search"></i></div>
+                <div class="stat-content">
+                    <h3 id="totalThamKhao">0 đ</h3>
+                    <p>Tổng thành tiền STK</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-content">
+                    <h3 id="averagePrice">0 đ</h3>
+                    <p>TB đơn giá STK</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search and Filter -->
+        <section class="search-section">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Tìm kiếm theo mã sách, nhà xuất bản, loại sách..." 
+                       onkeyup="handleSearch(event)">
+                <button class="btn btn-secondary" onclick="clearSearch()">
+                    <i class="fas fa-times"></i> Xóa
+                </button>
+            </div>
+            <div class="filter-section">
+                <input type="text" id="publisherFilter" placeholder="Lọc theo nhà xuất bản..." 
+                       onkeyup="handlePublisherFilter(event)">
+                <button class="btn btn-info" onclick="loadStatistics()">
+                    <i class="fas fa-sync-alt"></i> Làm mới thống kê
+                </button>
+            </div>
+        </section>
+
+        <!-- Books Table -->
+        <section class="books-section">
+            <div class="table-container">
+                <table id="booksTable">
+                    <thead>
+                        <tr>
+                            <th>Mã Sách</th>
+                            <th>Loại Sách</th>
+                            <th>Ngày Nhập</th>
+                            <th>Đơn Giá</th>
+                            <th>Số Lượng</th>
+                            <th>Nhà Xuất Bản</th>
+                            <th>Tình Trạng/Thuế</th>
+                            <th>Thành Tiền</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="booksTableBody">
+                        <tr>
+                            <td colspan="9" class="loading">Đang tải dữ liệu...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add/Edit Book Modal -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Thêm Sách Mới</h2>
+                <span class="close" onclick="closeBookModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="bookForm" onsubmit="handleSubmit(event)">
+                    <input type="hidden" id="bookId" name="bookId">
+                    
+                    <div class="form-group">
+                        <label for="bookType">Loại Sách <span class="required">*</span></label>
+                        <select id="bookType" name="bookType" required onchange="handleBookTypeChange()">
+                            <option value="">-- Chọn loại sách --</option>
+                            <option value="SACH_GIAO_KHOA">Sách Giáo Khoa</option>
+                            <option value="SACH_THAM_KHAO">Sách Tham Khảo</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="maSachGroup">
+                        <label for="maSach">Mã Sách</label>
+                        <input type="text" id="maSach" name="maSach" placeholder="Để trống để tự động tạo">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ngayNhap">Ngày Nhập <span class="required">*</span></label>
+                            <input type="date" id="ngayNhap" name="ngayNhap" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="donGia">Đơn Giá (đ) <span class="required">*</span></label>
+                            <input type="number" id="donGia" name="donGia" min="0" step="1000" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="soLuong">Số Lượng <span class="required">*</span></label>
+                            <input type="number" id="soLuong" name="soLuong" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nhaXuatBan">Nhà Xuất Bản <span class="required">*</span></label>
+                            <input type="text" id="nhaXuatBan" name="nhaXuatBan" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="tinhTrangGroup" style="display: none;">
+                        <label for="tinhTrang">Tình Trạng <span class="required">*</span></label>
+                        <select id="tinhTrang" name="tinhTrang">
+                            <option value="">-- Chọn tình trạng --</option>
+                            <option value="mới">Mới</option>
+                            <option value="cũ">Cũ</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="thueGroup" style="display: none;">
+                        <label for="thue">Thuế (đ) <span class="required">*</span></label>
+                        <input type="number" id="thue" name="thue" min="0" step="1000">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeBookModal()">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Lưu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

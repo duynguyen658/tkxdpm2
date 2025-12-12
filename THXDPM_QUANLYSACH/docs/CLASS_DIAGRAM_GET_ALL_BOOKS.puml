@@ -1,0 +1,137 @@
+@startuml Class Diagram - Chức Năng In Danh Sách Sách
+!theme plain
+skinparam classAttributeIconSize 0
+
+package "interfaces.rest" {
+    class BookController {
+        - getAllBooksUseCase: GetAllBooksUseCase
+        + getAllBooks(): ResponseEntity<?>
+    }
+}
+
+package "application.usecase" {
+    interface GetAllBooksUseCase {
+        + execute(): Result<List<BookResponse>>
+    }
+    
+    class BookResponse {
+        + maSach: String
+        + loaiSach: String
+        + ngayNhap: String
+        + donGia: double
+        + soLuong: int
+        + nhaXuatBan: String
+        + tinhTrang: String
+        + thue: Double
+        + thanhTien: double
+        + {static} from(Book): BookResponse
+    }
+}
+
+package "application.service" {
+    class GetAllBooksService {
+        - bookRepository: BookRepository
+        + execute(): Result<List<BookResponse>>
+    }
+}
+
+package "application.port.output" {
+    interface BookRepository {
+        + findAll(): List<Book>
+    }
+}
+
+package "infrastructure.repository" {
+    class InMemoryBookRepository {
+        - books: Map<String, Book>
+        + findAll(): List<Book>
+    }
+}
+
+package "domain.entity.book" {
+    interface Book {
+        + id(): BookId
+        + importDate(): ImportDate
+        + unitPrice(): Price
+        + quantity(): Quantity
+        + publisher(): Publisher
+        + calculateTotal(): TotalAmount
+        + getBookType(): String
+    }
+    
+    class SachGiaoKhoa {
+        - id: BookId
+        - importDate: ImportDate
+        - unitPrice: Price
+        - quantity: Quantity
+        - publisher: Publisher
+        - status: BookStatus
+        + calculateTotal(): TotalAmount
+        + getBookType(): String
+        + status(): BookStatus
+    }
+    
+    class SachThamKhao {
+        - id: BookId
+        - importDate: ImportDate
+        - unitPrice: Price
+        - quantity: Quantity
+        - publisher: Publisher
+        - tax: Tax
+        + calculateTotal(): TotalAmount
+        + getBookType(): String
+        + tax(): Tax
+    }
+}
+
+package "domain" {
+    class Result<T> {
+        - success: boolean
+        - payload: T
+        - errorMessage: String
+        + {static} ok(T): Result<T>
+        + {static} fail(String): Result<T>
+        + isSuccess(): boolean
+        + payload(): Optional<T>
+        + errorMessage(): Optional<String>
+    }
+}
+
+' Relationships
+BookController --> GetAllBooksUseCase : uses
+GetAllBooksUseCase <|.. GetAllBooksService : implements
+GetAllBooksService --> BookRepository : uses
+BookRepository <|.. InMemoryBookRepository : implements
+InMemoryBookRepository --> Book : returns
+Book <|.. SachGiaoKhoa : implements
+Book <|.. SachThamKhao : implements
+GetAllBooksService --> BookResponse : creates
+GetAllBooksService --> Result : returns
+BookResponse ..> Book : converts from
+BookResponse ..> SachGiaoKhoa : converts from
+BookResponse ..> SachThamKhao : converts from
+
+note right of BookController
+  REST Controller nhận request
+  GET /api/books
+end note
+
+note right of GetAllBooksService
+  Service xử lý logic nghiệp vụ:
+  1. Lấy tất cả sách từ repository
+  2. Chuyển đổi sang BookResponse
+  3. Trả về Result
+end note
+
+note right of InMemoryBookRepository
+  Repository lưu trữ sách
+  trong bộ nhớ (Map)
+end note
+
+note right of Book
+  Domain entity interface
+  Định nghĩa các thuộc tính
+  và phương thức chung
+end note
+
+@enduml

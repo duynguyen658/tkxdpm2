@@ -37,7 +37,7 @@ class GetAllBooksServiceTest {
 
     @Test
     void kichBan1_shouldReturnEmptyList_whenNoBooks() {
-        // Kịch bản 1: Lấy danh sách khi chưa có sách nào
+        // Kịch bản 2: Không có sách
         final Result<List<BookResponse>> result = service.execute();
 
         assertTrue(result.isSuccess());
@@ -47,7 +47,7 @@ class GetAllBooksServiceTest {
 
     @Test
     void kichBan2_shouldReturnAllBooks_whenBooksExist() {
-        // Kịch bản 2: Lấy danh sách tất cả sách
+        // Kịch bản 1: Có sách
         final SachGiaoKhoa book1 = SachGiaoKhoa.create(
                 BookId.of("SGK-001"),
                 ImportDate.of(15, 1, 2024),

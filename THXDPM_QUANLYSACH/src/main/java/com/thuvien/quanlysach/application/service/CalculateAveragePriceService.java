@@ -24,7 +24,7 @@ public class CalculateAveragePriceService implements CalculateAveragePriceUseCas
                     .collect(Collectors.toList());
 
             if (sachThamKhaos.isEmpty()) {
-                return Result.ok(new AveragePriceResponse(0.0, 0));
+                return Result.fail("Không có sách tham khảo trong hệ thống");
             }
 
             final double tongDonGia = sachThamKhaos.stream()

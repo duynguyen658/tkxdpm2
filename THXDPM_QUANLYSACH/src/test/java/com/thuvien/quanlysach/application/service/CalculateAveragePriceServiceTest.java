@@ -1,6 +1,7 @@
 package com.thuvien.quanlysach.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.thuvien.quanlysach.application.port.output.BookRepository;
@@ -36,8 +37,8 @@ class CalculateAveragePriceServiceTest {
     }
 
     @Test
-    void kichBan1_shouldReturnZero_whenNoSachThamKhao() {
-        // Kịch bản 1: Không có sách tham khảo
+    void kichBan1_shouldReturnFail_whenNoSachThamKhao() {
+        // Kịch bản 1: Không có sách tham khảo - trả về thất bại
         final SachGiaoKhoa bookGiaoKhoa = SachGiaoKhoa.create(
                 BookId.of("SGK-001"),
                 ImportDate.of(15, 1, 2024),
@@ -51,15 +52,14 @@ class CalculateAveragePriceServiceTest {
 
         final Result<AveragePriceResponse> result = service.execute();
 
-        assertTrue(result.isSuccess());
-        final AveragePriceResponse response = result.payload().orElseThrow();
-        assertEquals(0.0, response.trungBinhCongDonGia(), 0.01);
-        assertEquals(0, response.soLuongSachThamKhao());
+        assertFalse(result.isSuccess());
+        assertTrue(result.errorMessage().isPresent());
+        assertEquals("Không có sách tham khảo trong hệ thống", result.errorMessage().orElse(""));
     }
 
     @Test
     void kichBan2_shouldCalculateAverage_whenOneSachThamKhao() {
-        // Kịch bản 2: Tính trung bình với 1 sách tham khảo
+        // Kịch bản 2: Tính trung bình thành công với 1 sách tham khảo
         final SachThamKhao book = SachThamKhao.create(
                 BookId.of("STK-001"),
                 ImportDate.of(15, 1, 2024),
