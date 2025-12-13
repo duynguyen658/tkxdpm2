@@ -5,9 +5,9 @@ let isEditMode = false;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    loadBooks();
-    loadStatistics();
+    // Không tự động load dữ liệu khi vào trang
     setupDateInput();
+    showInitialMessage();
 });
 
 // Setup date input to today's date
@@ -16,17 +16,23 @@ function setupDateInput() {
     document.getElementById('ngayNhap').value = today;
 }
 
-// Load all books
+// Load all books (click button)
 async function loadBooks() {
     try {
+        // Show loading
+        document.getElementById('booksTableBody').innerHTML = 
+            '<tr><td colspan="9" class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>';
+        
         const response = await fetch(API_BASE_URL);
         const data = await response.json();
         
         if (data.success) {
             currentBooks = data.books || [];
             displayBooks(currentBooks);
+            showToast(`Đã tải ${data.books.length} sách`, 'success');
         } else {
             showToast('Không thể tải danh sách sách', 'error');
+            showInitialMessage();
         }
     } catch (error) {
         console.error('Error loading books:', error);
@@ -73,46 +79,81 @@ function displayBooks(books) {
     document.getElementById('totalBooks').textContent = books.length;
 }
 
-// Load statistics
-async function loadStatistics() {
+// Load total by type (click button)
+async function loadTotalByType() {
     try {
-        // Load total by type
-        const totalResponse = await fetch(`${API_BASE_URL}/statistics/total-by-type`);
-        const totalData = await totalResponse.json();
+        const response = await fetch(`${API_BASE_URL}/statistics/total-by-type`);
+        const data = await response.json();
         
-        if (totalData.success) {
-            document.getElementById('totalGiaoKhoa').textContent = formatCurrency(totalData.tongThanhTienSachGiaoKhoa);
-            document.getElementById('totalThamKhao').textContent = formatCurrency(totalData.tongThanhTienSachThamKhao);
-        }
-        
-        // Load average price
-        const avgResponse = await fetch(`${API_BASE_URL}/statistics/average-price`);
-        const avgData = await avgResponse.json();
-        
-        if (avgData.success) {
-            document.getElementById('averagePrice').textContent = formatCurrency(avgData.trungBinhCongDonGia);
+        if (data.success) {
+            document.getElementById('totalGiaoKhoa').textContent = formatCurrency(data.tongThanhTienSachGiaoKhoa);
+            document.getElementById('totalThamKhao').textContent = formatCurrency(data.tongThanhTienSachThamKhao);
+            showToast('Đã tính tổng thành tiền theo loại', 'success');
         } else {
-            // Khi không có sách tham khảo, hiển thị thông báo
-            document.getElementById('averagePrice').textContent = 'N/A';
+            showToast('Không thể tính tổng thành tiền', 'error');
         }
     } catch (error) {
-        console.error('Error loading statistics:', error);
+        console.error('Error loading total by type:', error);
+        showToast('Lỗi khi tính tổng thành tiền', 'error');
     }
 }
 
-// Search books
-async function searchBooks(keyword) {
-    if (!keyword.trim()) {
-        loadBooks();
+// Load average price (click button)
+async function loadAveragePrice() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/statistics/average-price`);
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('averagePrice').textContent = formatCurrency(data.trungBinhCongDonGia);
+            showToast(`Trung bình đơn giá: ${formatCurrency(data.trungBinhCongDonGia)}`, 'success');
+        } else {
+            document.getElementById('averagePrice').textContent = 'N/A';
+            showToast(data.message || 'Không có sách tham khảo trong hệ thống', 'info');
+        }
+    } catch (error) {
+        console.error('Error loading average price:', error);
+        showToast('Lỗi khi tính trung bình đơn giá', 'error');
+    }
+}
+
+// Show initial message
+function showInitialMessage() {
+    document.getElementById('booksTableBody').innerHTML = `
+        <tr>
+            <td colspan="9" class="empty">
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fas fa-info-circle" style="font-size: 48px; color: #64748b; margin-bottom: 16px;"></i>
+                    <p style="font-size: 16px; color: #64748b; margin-bottom: 16px;">Chưa có dữ liệu</p>
+                    <button class="btn btn-primary" onclick="loadBooks()">
+                        <i class="fas fa-download"></i> Tải danh sách sách
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+// Search books (click button)
+function searchBooks() {
+    const keyword = document.getElementById('searchInput').value.trim();
+    if (!keyword) {
+        showToast('Vui lòng nhập từ khóa tìm kiếm', 'info');
         return;
     }
-    
+    performSearch(keyword);
+}
+
+// Perform search
+async function performSearch(keyword) {
     try {
         const response = await fetch(`${API_BASE_URL}/search?keyword=${encodeURIComponent(keyword)}`);
         const data = await response.json();
         
         if (data.success) {
-            displayBooks(data.books || []);
+            currentBooks = data.books || [];
+            displayBooks(currentBooks);
+            showToast(`Tìm thấy ${data.books.length} kết quả cho "${keyword}"`, 'success');
         } else {
             showToast('Không tìm thấy sách', 'info');
             displayBooks([]);
@@ -123,44 +164,48 @@ async function searchBooks(keyword) {
     }
 }
 
-// Handle search input
-function handleSearch(event) {
-    if (event.key === 'Enter' || event.type === 'input') {
-        const keyword = event.target.value;
-        searchBooks(keyword);
-    }
-}
-
 // Clear search
 function clearSearch() {
     document.getElementById('searchInput').value = '';
-    loadBooks();
+    document.getElementById('publisherFilter').value = '';
+    showInitialMessage();
+    // Reset statistics
+    document.getElementById('totalBooks').textContent = '-';
+    document.getElementById('totalGiaoKhoa').textContent = '-';
+    document.getElementById('totalThamKhao').textContent = '-';
+    document.getElementById('averagePrice').textContent = '-';
+    currentBooks = [];
 }
 
-// Filter by publisher
-async function handlePublisherFilter(event) {
-    if (event.key === 'Enter' || event.type === 'input') {
-        const publisher = event.target.value.trim();
-        if (!publisher) {
-            loadBooks();
-            return;
-        }
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/publisher/${encodeURIComponent(publisher)}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                displayBooks(data.books || []);
-            } else {
-                showToast('Không tìm thấy sách của nhà xuất bản này', 'info');
-                displayBooks([]);
-            }
-        } catch (error) {
-            console.error('Error filtering by publisher:', error);
-            showToast('Lỗi khi lọc theo nhà xuất bản', 'error');
-        }
+// Filter by publisher (click button)
+async function filterByPublisher() {
+    const publisher = document.getElementById('publisherFilter').value.trim();
+    if (!publisher) {
+        showToast('Vui lòng nhập tên nhà xuất bản', 'info');
+        return;
     }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/publisher/${encodeURIComponent(publisher)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            currentBooks = data.books || [];
+            displayBooks(currentBooks);
+            showToast(`Tìm thấy ${data.books.length} sách giáo khoa của "${publisher}"`, 'success');
+        } else {
+            showToast('Không tìm thấy sách của nhà xuất bản này', 'info');
+            displayBooks([]);
+        }
+    } catch (error) {
+        console.error('Error filtering by publisher:', error);
+        showToast('Lỗi khi lọc theo nhà xuất bản', 'error');
+    }
+}
+
+// Load all books (explicit button)
+function loadAllBooks() {
+    loadBooks();
 }
 
 // Open add book modal
@@ -269,8 +314,12 @@ async function deleteBook(bookId) {
         
         if (data.success) {
             showToast(data.message || 'Đã xóa sách thành công', 'success');
-            loadBooks();
-            loadStatistics();
+            // Reload books if we have data displayed
+            if (currentBooks.length > 0) {
+                loadBooks();
+            } else {
+                showInitialMessage();
+            }
         } else {
             showToast(data.message || 'Không thể xóa sách', 'error');
         }
@@ -347,8 +396,10 @@ async function handleSubmit(event) {
         if (data.success) {
             showToast(data.message || (isEditMode ? 'Đã cập nhật sách thành công' : 'Đã thêm sách thành công'), 'success');
             closeBookModal();
-            loadBooks();
-            loadStatistics();
+            // Reload books if we have data displayed
+            if (currentBooks.length > 0) {
+                loadBooks();
+            }
         } else {
             showToast(data.message || 'Có lỗi xảy ra', 'error');
         }

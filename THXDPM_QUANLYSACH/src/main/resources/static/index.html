@@ -26,29 +26,41 @@
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-book-open"></i></div>
                 <div class="stat-content">
-                    <h3 id="totalBooks">0</h3>
+                    <h3 id="totalBooks">-</h3>
                     <p>Tổng số sách</p>
+                    <button class="btn btn-sm btn-primary" onclick="loadBooks()" style="margin-top: 8px;">
+                        <i class="fas fa-sync"></i> Tải danh sách
+                    </button>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
                 <div class="stat-content">
-                    <h3 id="totalGiaoKhoa">0 đ</h3>
+                    <h3 id="totalGiaoKhoa">-</h3>
                     <p>Tổng thành tiền SGK</p>
+                    <button class="btn btn-sm btn-primary" onclick="loadTotalByType()" style="margin-top: 8px;">
+                        <i class="fas fa-calculator"></i> Tính tổng
+                    </button>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-search"></i></div>
                 <div class="stat-content">
-                    <h3 id="totalThamKhao">0 đ</h3>
+                    <h3 id="totalThamKhao">-</h3>
                     <p>Tổng thành tiền STK</p>
+                    <button class="btn btn-sm btn-primary" onclick="loadTotalByType()" style="margin-top: 8px;">
+                        <i class="fas fa-calculator"></i> Tính tổng
+                    </button>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
                 <div class="stat-content">
-                    <h3 id="averagePrice">0 đ</h3>
+                    <h3 id="averagePrice">-</h3>
                     <p>TB đơn giá STK</p>
+                    <button class="btn btn-sm btn-primary" onclick="loadAveragePrice()" style="margin-top: 8px;">
+                        <i class="fas fa-chart-bar"></i> Tính trung bình
+                    </button>
                 </div>
             </div>
         </section>
@@ -57,17 +69,21 @@
         <section class="search-section">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Tìm kiếm theo mã sách, nhà xuất bản, loại sách..." 
-                       onkeyup="handleSearch(event)">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm theo mã sách, nhà xuất bản, loại sách...">
+                <button class="btn btn-primary" onclick="searchBooks()">
+                    <i class="fas fa-search"></i> Tìm kiếm
+                </button>
                 <button class="btn btn-secondary" onclick="clearSearch()">
                     <i class="fas fa-times"></i> Xóa
                 </button>
             </div>
             <div class="filter-section">
-                <input type="text" id="publisherFilter" placeholder="Lọc theo nhà xuất bản..." 
-                       onkeyup="handlePublisherFilter(event)">
-                <button class="btn btn-info" onclick="loadStatistics()">
-                    <i class="fas fa-sync-alt"></i> Làm mới thống kê
+                <input type="text" id="publisherFilter" placeholder="Lọc theo nhà xuất bản...">
+                <button class="btn btn-info" onclick="filterByPublisher()">
+                    <i class="fas fa-filter"></i> Lọc theo NXB
+                </button>
+                <button class="btn btn-success" onclick="loadAllBooks()">
+                    <i class="fas fa-list"></i> Xem tất cả
                 </button>
             </div>
         </section>
@@ -91,7 +107,15 @@
                     </thead>
                     <tbody id="booksTableBody">
                         <tr>
-                            <td colspan="9" class="loading">Đang tải dữ liệu...</td>
+                            <td colspan="9" class="empty">
+                                <div style="text-align: center; padding: 20px;">
+                                    <i class="fas fa-info-circle" style="font-size: 48px; color: #64748b; margin-bottom: 16px;"></i>
+                                    <p style="font-size: 16px; color: #64748b; margin-bottom: 16px;">Chưa có dữ liệu</p>
+                                    <button class="btn btn-primary" onclick="loadBooks()">
+                                        <i class="fas fa-download"></i> Tải danh sách sách
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

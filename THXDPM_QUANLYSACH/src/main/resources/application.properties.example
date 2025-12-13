@@ -2,10 +2,10 @@ server.port=8080
 spring.application.name=QuanLySach
 
 # Database Configuration (PostgreSQL)
+# Thay đổi các giá trị sau theo cấu hình PostgreSQL của bạn
 spring.datasource.url=jdbc:postgresql://localhost:5432/quanlysach
-spring.datasource.username=iot_user
-spring.datasource.password=iot_password
-spring.datasource.driver-class-name=org.postgresql.Driver
+spring.datasource.username=postgres
+spring.datasource.password=YOUR_POSTGRES_PASSWORD_HERE
 
 # JPA Configuration
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect

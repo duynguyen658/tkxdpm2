@@ -17,7 +17,7 @@ import com.thuvien.quanlysach.application.usecase.GetAllBooksUseCase;
 import com.thuvien.quanlysach.application.usecase.GetBooksByPublisherUseCase;
 import com.thuvien.quanlysach.application.usecase.SearchBooksUseCase;
 import com.thuvien.quanlysach.application.usecase.UpdateBookUseCase;
-import com.thuvien.quanlysach.infrastructure.repository.InMemoryBookRepository;
+import com.thuvien.quanlysach.infrastructure.repository.JpaBookRepositoryAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,8 +25,8 @@ import org.springframework.context.annotation.Configuration;
 public class ApplicationConfig {
 
     @Bean
-    public BookRepository bookRepository() {
-        return new InMemoryBookRepository();
+    public BookRepository bookRepository(final JpaBookRepositoryAdapter jpaBookRepositoryAdapter) {
+        return jpaBookRepositoryAdapter;
     }
 
     @Bean

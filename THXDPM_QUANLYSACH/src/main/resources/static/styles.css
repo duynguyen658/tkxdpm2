@@ -148,7 +148,7 @@ body {
     border-radius: 12px;
     box-shadow: var(--shadow);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 20px;
     transition: transform 0.3s ease;
 }
@@ -180,6 +180,14 @@ body {
 .stat-content p {
     font-size: 14px;
     color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.stat-content button {
+    width: 100%;
+    margin-top: 8px;
+    font-size: 12px;
+    padding: 6px 12px;
 }
 
 /* Search Section */
